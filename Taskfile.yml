@@ -1,0 +1,68 @@
+version: '3'
+
+# Reusable command runner for the ubgo/otelkit repo.
+# Run `task --list` to see all available tasks.
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  test:
+    desc: Run all tests
+    cmds:
+      - go test ./...
+
+  race:
+    desc: Run all tests with the race detector
+    cmds:
+      - go test -race ./...
+
+  cover:
+    desc: Run tests with the race detector and enforce 100% line coverage
+    cmds:
+      - go test -race -coverprofile=cover.out ./...
+      - go tool cover -func=cover.out | tail -1
+      - |
+        pct=$(go tool cover -func=cover.out | tail -1 | awk '{print $3}' | tr -d '%')
+        if [ "$(printf '%.0f' "$pct")" -lt 100 ]; then
+          echo "FAIL: coverage ${pct}% is below the 100% gate"
+          go tool cover -func=cover.out | grep -v '100.0%'
+          exit 1
+        fi
+        echo "OK: coverage ${pct}%"
+
+  cover:html:
+    desc: Open an HTML coverage report
+    cmds:
+      - go test -coverprofile=cover.out ./...
+      - go tool cover -html=cover.out -o cover.html
+      - echo "Coverage report written to cover.html"
+
+  vet:
+    desc: Run go vet
+    cmds:
+      - go vet ./...
+
+  lint:
+    desc: Run golangci-lint (must be installed)
+    cmds:
+      - golangci-lint run ./...
+
+  fmt:
+    desc: Format all Go files
+    cmds:
+      - gofmt -w .
+
+  tidy:
+    desc: Tidy the module
+    cmds:
+      - go mod tidy
+
+  check:
+    desc: Run fmt, vet, and the 100% coverage gate
+    cmds:
+      - task: fmt
+      - task: vet
+      - task: cover
