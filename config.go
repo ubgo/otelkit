@@ -69,8 +69,12 @@ type Config struct {
 	// envOverrides, when false, makes programmatic/preset values win over raw
 	// OTEL_* environment variables. Default true (spec precedence).
 	envOverrides bool
-	selfTest     bool
-	dryRun       bool
+	// selfTest, set by WithSelfTest, makes Init send one span synchronously and
+	// fail loudly if it can't be exported.
+	selfTest bool
+	// dryRun, set by WithDryRun, prints the resolved config and exports to
+	// stdout instead of the configured backend.
+	dryRun bool
 }
 
 // SignalConfig configures one signal's exporter. A disabled signal yields a
