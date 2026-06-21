@@ -1,3 +1,12 @@
+// resource.go — builds the OTEL Resource (the identity attached to every signal).
+//
+// buildResource assembles detector attributes (process/os/host by default, via a
+// token-list selector) and then the explicit identity — service.name (with the
+// spec unknown_service:<binary> fallback), service.version, and
+// deployment.environment.name — merged last so the configured service.name can
+// never be silently dropped. buildResource is indirected through buildResourceFn
+// in otelkit.go so Init's resource-error path is testable.
+
 package otelkit
 
 import (

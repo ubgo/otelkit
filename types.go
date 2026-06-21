@@ -1,3 +1,13 @@
+// types.go — the small enums that describe a telemetry pipeline: Signal,
+// Transport, Sampler, Temporality, TLSMode.
+//
+// Each enum carries the OTEL-spec mappings the rest of the package relies on:
+// Transport knows its default OTLP port (4317/4318) and protocol value; Signal
+// knows its "/v1/<signal>" HTTP path suffix; Sampler stringifies to the
+// OTEL_TRACES_SAMPLER values. Pure value types, no behaviour beyond String()
+// and these lookups. Used by config.go (endpoint resolution) and providers.go
+// (building the SDK objects).
+
 package otelkit
 
 import "fmt"

@@ -1,3 +1,11 @@
+// options.go — the public With* functional-option API and the Option type.
+//
+// Options mutate a Config. They are applied after any Preset and before the
+// OTEL_* env overlay (precedence: preset < options < env). WithConfig swaps in a
+// fully-formed Config (e.g. mapped from PKL) while preserving internal defaults;
+// WithEnvOverrides(false) makes options authoritative over env. Diagnostics
+// toggles (WithSelfTest/WithDryRun) and WithErrorHandler also live here.
+
 package otelkit
 
 import (

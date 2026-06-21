@@ -1,3 +1,11 @@
+// probe.go — ProbeEndpoint, the connectivity diagnostic.
+//
+// A standalone TCP dial (and TLS handshake for TLS modes) against an OTLP
+// endpoint, turning the SDK's opaque "deadline exceeded"/gRPC "Unavailable" into
+// a specific message (DNS / port / protocol / TLS). Lighter than the self-test:
+// it dials but sends no span, so it doesn't validate auth. Good for readiness
+// checks. probeHostPort normalizes the endpoint to a dialable host:port.
+
 package otelkit
 
 import (

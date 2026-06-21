@@ -1,3 +1,12 @@
+// exporters.go — per-signal exporter construction and the gRPC registration seam.
+//
+// newSpanExporter / newMetricExporter / newLogExporter build OTLP/HTTP or stdout
+// exporters from a SignalConfig + TLSMode (pure, no global side effects). gRPC is
+// not implemented here: the core exposes SpanExporterFactory/MetricExporterFactory/
+// LogExporterFactory and a RegisterGRPC hook that contrib/otelkit-grpc fills via
+// its init; a TransportGRPC request with no registration returns ErrGRPCNotLinked.
+// Consumed by providers.go.
+
 package otelkit
 
 import (

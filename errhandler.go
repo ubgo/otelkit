@@ -1,3 +1,10 @@
+// errhandler.go — installs the global OTEL error handler (loud by default).
+//
+// The OTEL SDK reports asynchronous export failures to otel.SetErrorHandler,
+// which is a no-op unless set. installErrorHandler wires a default stderr handler
+// (overridable via WithErrorHandler) so a backend that starts rejecting data is
+// visible instead of silently dropped. Called from Init for the non-no-op path.
+
 package otelkit
 
 import (

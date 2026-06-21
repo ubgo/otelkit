@@ -1,3 +1,12 @@
+// env.go — the OTEL_* environment overlay and its parse helpers.
+//
+// applyEnv overlays the standard spec variables (protocol, endpoint, headers,
+// sampler, temporality, metric interval, insecure) onto a Config, with
+// per-signal overrides. It runs only when Config.envOverrides is true (the
+// default), implementing the "defaults < preset < options < env" precedence.
+// envDisabled() reads OTEL_SDK_DISABLED. Never call os.Getenv outside this
+// file — component code stays env-free so precedence is honored in one place.
+
 package otelkit
 
 import (

@@ -1,12 +1,12 @@
 # ubgo/otelkit
 
-**The boring, correct, loud way to turn OpenTelemetry on in a Go service.**
+[![Go Reference](https://pkg.go.dev/badge/github.com/ubgo/otelkit.svg)](https://pkg.go.dev/github.com/ubgo/otelkit) [![Go Report Card](https://goreportcard.com/badge/github.com/ubgo/otelkit)](https://goreportcard.com/report/github.com/ubgo/otelkit) ![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen) [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE) ![Go](https://img.shields.io/badge/go-1.24-00ADD8?logo=go)
 
-`otelkit` stands up the OpenTelemetry trace/metric/log pipeline — providers, exporters, resource, propagators, and an ordered shutdown — from one explicit constructor. Point it at a backend (HyperDX, Grafana Cloud, Honeycomb, Datadog, New Relic, an OTLP collector, or stdout) and get correct, shutdown-safe telemetry without re-writing the usual ~150 lines of fiddly, failure-silent setup.
+**The boring, correct, loud way to turn OpenTelemetry on in a Go service — one constructor, vendor presets, and failures you can actually see.**
+
+`otelkit` stands up the OpenTelemetry trace/metric/log pipeline — providers, exporters, resource, propagators, and an ordered shutdown — from one explicit constructor. Point it at a backend (HyperDX, Grafana Cloud, Honeycomb, Datadog, New Relic, an OTLP collector, or stdout) and get correct, shutdown-safe telemetry without re-writing the usual ~150 lines of fiddly, failure-silent setup. The core has **zero application dependencies**; OTLP/gRPC ships as an opt-in `contrib/` module so your dependency graph stays lean.
 
 It is a **bootstrap, not an SDK**: it wires the official `go.opentelemetry.io/otel` SDK rather than reimplementing it. Writing log lines is a logger's job — `otelkit` exposes the `LoggerProvider` that [`github.com/ubgo/logger`](https://github.com/ubgo/logger) (and any OTEL log bridge) consumes.
-
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE) ![Go](https://img.shields.io/badge/go-1.24-00ADD8?logo=go) ![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
 
 ## Why otelkit
 
@@ -19,6 +19,35 @@ OpenTelemetry's Go SDK ships excellent primitives and **no opinionated bootstrap
 - **One handle, one ordered `Shutdown`** + a ready-made signal helper; a real no-op on `OTEL_SDK_DISABLED`.
 - **Future-proof** — delegates to the now-stable declarative config (`otelconf`) when `OTEL_CONFIG_FILE` is set.
 - **Zero application dependencies.**
+
+## Modules
+
+The core stays lean for HTTP-only deployments; pull a `contrib/` module only when you need it.
+
+| Module | Import | Purpose | Heavy deps |
+|---|---|---|---|
+| **core** | `github.com/ubgo/otelkit` | Config, resource, providers, presets, diagnostics, OTLP/HTTP + stdout exporters, `otelconf` delegation | none beyond `go.opentelemetry.io/otel/*` |
+| **gRPC** | `github.com/ubgo/otelkit/contrib/otelkit-grpc` | OTLP/gRPC exporters (blank-import to enable; gRPC-preferring presets pull it) | `google.golang.org/grpc` |
+
+> Selecting `TransportGRPC` without importing the contrib module returns `otelkit.ErrGRPCNotLinked` — loud, not silent.
+
+## How it compares
+
+otelkit is the **vendor-neutral, batteries-included** bootstrap. The honest landscape (`otelconf` is the OTEL declarative-config standard — otelkit *delegates* to it, so they're complementary):
+
+| | **otelkit** | `setupOTelSDK` (docs snippet) | `otelconf` | Vendor distros (uptrace-go, …) |
+|---|:---:|:---:|:---:|:---:|
+| Vendor-neutral | ✅ | ✅ | ✅ | ❌ backend-locked |
+| Vendor presets — 1-line backend swap | ✅ | ❌ | ❌ | only their own |
+| Owns endpoint/port/`/v1/` path (no footguns) | ✅ | ❌ | ❌ | partial |
+| Loud diagnostics (self-test · probe · dry-run) | ✅ | ❌ | ❌ | ❌ |
+| Full `OTEL_*` env compliance | ✅ | partial | ✅ | partial |
+| Declarative `OTEL_CONFIG_FILE` | ✅ (delegates to `otelconf`) | ❌ | ✅ (it *is* this) | ❌ |
+| Real no-op on `OTEL_SDK_DISABLED` | ✅ | ❌ | ❌ | ❌ |
+| Ordered `Shutdown` + SIGTERM helper | ✅ | partial | partial | partial |
+| All three signals (traces/metrics/logs) | ✅ | ✅ | ✅ | varies |
+| Versioned library, not a copy-paste snippet | ✅ | ❌ | ✅ | ✅ |
+| Coverage | 100% | n/a | — | varies |
 
 ## Install
 

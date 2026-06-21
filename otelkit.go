@@ -1,3 +1,13 @@
+// otelkit.go — the entry point: Init and the *Telemetry handle.
+//
+// Init resolves config (preset < options < env, or a delegated OTEL_CONFIG_FILE),
+// builds the resource and the three providers, installs the error handler, and
+// returns one handle. Telemetry owns the providers + propagator and exposes the
+// accessors, SetGlobal, Tracer, ForceFlush, SelfTest, and (in shutdown.go)
+// Shutdown/RunOnSignal. Also here: the no-op handle for OTEL_SDK_DISABLED, the
+// propagator builder, and the dry-run effective-config printer. The flow to read
+// top-to-bottom is the Init function.
+
 package otelkit
 
 import (

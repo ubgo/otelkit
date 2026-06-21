@@ -1,3 +1,9 @@
+// errors.go — the exported sentinel errors callers can match with errors.Is.
+//
+// Kept in one place so the error surface is discoverable. ErrGRPCNotLinked is
+// the deliberate "loud, not silent" signal returned when TransportGRPC is
+// selected without importing contrib/otelkit-grpc.
+
 package otelkit
 
 import "errors"

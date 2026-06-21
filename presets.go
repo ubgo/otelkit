@@ -1,3 +1,13 @@
+// presets.go — vendor presets and the Preset/WithPreset machinery.
+//
+// A Preset is a func(*Config) that encodes one backend's ingest details as data:
+// endpoint, transport, auth-header name+format, path quirk, and metric
+// temporality (e.g. PresetDatadog forces delta because Datadog rejects
+// cumulative; PresetHoneycomb adds a metrics-only dataset header). Presets run
+// before other options (preset < options < env). PresetCollector is the
+// vendor-neutral escape hatch. Each preset's exact shape is asserted in
+// presets_test.go. The matrix and rationale live in docs/presets.md.
+
 package otelkit
 
 import "encoding/base64"

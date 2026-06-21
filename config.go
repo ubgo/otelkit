@@ -1,3 +1,13 @@
+// config.go — Config, SignalConfig, the defaults, and the endpoint/path
+// resolver (resolveEndpoint / GRPCTarget).
+//
+// This is where otelkit "owns all port + /v1/<signal> construction" — the
+// single biggest silent-failure killer. resolveEndpoint is pure string logic
+// (gRPC host:port, HTTP path-append with double-append guard, per-signal URLs
+// verbatim) and is exhaustively unit-tested in config_test.go. Config is built
+// by options.go (programmatic), env.go (OTEL_* overlay), and presets.go, then
+// consumed by providers.go.
+
 package otelkit
 
 import (

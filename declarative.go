@@ -1,3 +1,11 @@
+// declarative.go — OTEL_CONFIG_FILE delegation to otelconf.
+//
+// When configFilePath() finds OTEL_CONFIG_FILE (or the experimental variant),
+// Init calls initFromFile, which reads the YAML and delegates to the stable
+// go.opentelemetry.io/contrib/otelconf loader; the file wins outright (env +
+// options ignored except ${ENV} substitution inside the YAML). parseYAMLFn /
+// newSDKFn are test seams so the parse/build error paths are coverable.
+
 package otelkit
 
 import (

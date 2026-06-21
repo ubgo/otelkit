@@ -1,3 +1,11 @@
+// providers.go — builds the three SDK providers from a Config + Resource.
+//
+// buildTracerProvider / buildMeterProvider / buildLoggerProvider each return the
+// provider plus a shutdownFunc. A disabled signal yields the OTEL no-op provider
+// (never nil) and a nil shutdown. buildSampler maps the Sampler enum + ratio to
+// an SDK sampler. Stdout uses a sync/simple processor; network transports batch.
+// Construction is pure; Init (otelkit.go) wires them into the *Telemetry handle.
+
 package otelkit
 
 import (

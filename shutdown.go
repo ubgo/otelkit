@@ -1,3 +1,11 @@
+// shutdown.go — Telemetry.Shutdown and RunOnSignal.
+//
+// Shutdown flushes/shuts down providers in order — logs, then metrics, then
+// traces — so a prior phase's errors still reach the collectors before those
+// providers close; all are attempted and errors aggregate via errors.Join.
+// RunOnSignal blocks until SIGTERM/SIGINT (or ctx cancel), then runs Shutdown on
+// a FRESH background context so a cancelled app context can't abort the flush.
+
 package otelkit
 
 import (
