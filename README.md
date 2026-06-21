@@ -131,7 +131,44 @@ Without the contrib import, selecting `TransportGRPC` returns `otelkit.ErrGRPCNo
 
 ## Migrating from a hand-rolled bootstrap
 
-If you have a `lace/gotel`-style bootstrap (build three providers, attach HTTP exporters, set globals, shut down): replace it with one `otelkit.Init(...)` call plus the matching preset. `otelkit` adds gRPC, vendor presets, loud diagnostics, the `OTEL_*` surface, a real no-op on `OTEL_SDK_DISABLED`, and an ordered `Shutdown` that flushes all three signals (instead of returning on the first error).
+If you have the familiar ~150-line bootstrap (build three providers, attach OTLP exporters, set globals, wire shutdown): replace it with one `otelkit.Init(...)` call plus the matching preset. otelkit adds gRPC, vendor presets, loud diagnostics, the full `OTEL_*` surface, a real no-op on `OTEL_SDK_DISABLED`, declarative-config delegation, and an ordered `Shutdown` that flushes all three signals (instead of returning on the first error). Full before/after in [docs/migration.md](./docs/migration.md).
+
+## Documentation
+
+| Guide | Covers |
+|---|---|
+| [Getting started](./docs/getting-started.md) | Zero to correlated telemetry in three lines. |
+| [Configuration](./docs/configuration.md) | Options, the full `OTEL_*` env surface, precedence. |
+| [Presets](./docs/presets.md) | Vendor presets and what each encodes. |
+| [Diagnostics](./docs/diagnostics.md) | Self-test, probe, dry-run, error handler. |
+| [Declarative config](./docs/declarative-config.md) | `OTEL_CONFIG_FILE` delegation. |
+| [Migration](./docs/migration.md) | Replacing a hand-rolled bootstrap. |
+| [Architecture](./docs/architecture.md) | How it fits; the endpoint/path rules. |
+| [ADRs](./adr) · [Snippets](./snippets) · [Coverage](./COVERAGE.md) | Decisions, copy-paste, test coverage. |
+
+API reference: [pkg.go.dev/github.com/ubgo/otelkit](https://pkg.go.dev/github.com/ubgo/otelkit).
+
+## Examples
+
+Runnable programs in [`examples/`](./examples) — `go run ./01-basic`, etc.:
+
+`01-basic` · `02-all-signals` · `03-k8s-prestop` · `04-presets` · `05-self-test` · `06-dry-run` · `07-declarative` · `08-grpc`
+
+## Quality
+
+Both modules are held at **100% line coverage** with the race detector, gated in CI. See [COVERAGE.md](./COVERAGE.md).
+
+## FAQ
+
+**Does otelkit replace the OpenTelemetry SDK?** No — it's a bootstrap that wires the official SDK. You still create spans/metrics the normal OTEL way.
+
+**Does it write my logs?** No. It builds the `LoggerProvider`; a logger (e.g. [`github.com/ubgo/logger`](https://github.com/ubgo/logger)) writes log lines through it and correlates them with traces.
+
+**Why is gRPC a separate module?** To keep `google.golang.org/grpc` out of the core dependency graph for HTTP-only deployments. A blank import of `contrib/otelkit-grpc` enables it.
+
+**My backend isn't a preset.** Use `PresetCollector(endpoint, transport)` (no auth) or set headers/endpoint via `WithConfig` / `OTEL_EXPORTER_OTLP_*`. Presets are a convenience, not a requirement.
+
+**Nothing reaches my backend and there's no error.** That's exactly what otelkit fixes — add `WithSelfTest()` to fail at startup, or `WithDryRun()` to print the resolved config. See [diagnostics.md](./docs/diagnostics.md).
 
 ## License
 

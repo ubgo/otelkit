@@ -1,0 +1,20 @@
+# OpenTelemetry declarative configuration (opentelemetry-configuration schema).
+# Loaded by otelkit when OTEL_CONFIG_FILE points at this file. ${ENV} values are
+# substituted at load time.
+file_format: "0.3"
+
+resource:
+  attributes:
+    - name: service.name
+      value: declarative-example
+    - name: service.version
+      value: "1.0.0"
+    - name: deployment.environment.name
+      value: ${DEPLOY_ENV:-dev}
+
+tracer_provider:
+  processors:
+    - batch:
+        exporter:
+          otlp_http:
+            endpoint: ${OTLP_ENDPOINT:-http://localhost:4318}

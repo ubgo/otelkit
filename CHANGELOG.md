@@ -21,3 +21,9 @@ All notable changes to `ubgo/otelkit` are documented here. The format follows
 - Declarative-config delegation to `otelconf` via `OTEL_CONFIG_FILE`.
 - `contrib/otelkit-grpc`: OTLP/gRPC exporters (keeps `grpc` out of the core).
 - 100% line coverage (race) on the core and the gRPC contrib.
+
+### Docs & examples
+- Full `docs/` guide set: getting-started, configuration (env-var reference),
+  presets (vendor matrix), diagnostics, declarative-config, migration, architecture.
+- Runnable `examples/` (01-basic … 08-grpc), each built in CI.
+- Architecture Decision Records under `adr/`, copy-paste `snippets/`, and `COVERAGE.md`.
