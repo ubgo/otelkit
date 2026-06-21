@@ -29,3 +29,6 @@ go.work.sum
 # Build artifacts
 dist/
 build/
+
+# local multi-module workspace (CI builds each module standalone)
+go.work

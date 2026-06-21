@@ -16,7 +16,7 @@ Thanks for your interest in `ubgo/otelkit`. This repository is licensed under th
 | `.` | `github.com/ubgo/otelkit` | Core: config, resource, providers, presets, diagnostics, HTTP + stdout exporters, otelconf delegation. |
 | `contrib/otelkit-grpc` | `github.com/ubgo/otelkit/contrib/otelkit-grpc` | OTLP/gRPC exporters. Keeps `google.golang.org/grpc` out of the core. |
 | `examples/` | `github.com/ubgo/otelkit/examples` | Runnable example programs; must compile in CI. |
-| `docs/`, `adr/`, `snippets/` | — | Documentation, decisions, copy-paste fragments. |
+| `docs/` (incl. `docs/adr/`, `docs/snippets/`) | — | Documentation, decisions, copy-paste fragments. |
 
 ## Code conventions
 

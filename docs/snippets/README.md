@@ -1,6 +1,6 @@
 # Snippets
 
-Copy-paste fragments for common tasks. For full runnable programs see [../examples](../examples).
+Copy-paste fragments for common tasks. For full runnable programs see [../../examples](../../examples).
 
 ## Minimal
 

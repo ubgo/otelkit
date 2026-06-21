@@ -1,6 +1,6 @@
 # ubgo/otelkit
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/ubgo/otelkit.svg)](https://pkg.go.dev/github.com/ubgo/otelkit) [![Go Report Card](https://goreportcard.com/badge/github.com/ubgo/otelkit)](https://goreportcard.com/report/github.com/ubgo/otelkit) ![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen) [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE) ![Go](https://img.shields.io/badge/go-1.24-00ADD8?logo=go)
+[![Go Reference](https://pkg.go.dev/badge/github.com/ubgo/otelkit.svg)](https://pkg.go.dev/github.com/ubgo/otelkit) [![Go Report Card](https://goreportcard.com/badge/github.com/ubgo/otelkit)](https://goreportcard.com/report/github.com/ubgo/otelkit) ![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen) [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE) ![Go](https://img.shields.io/badge/go-1.25-00ADD8?logo=go)
 
 **The boring, correct, loud way to turn OpenTelemetry on in a Go service — one constructor, vendor presets, and failures you can actually see.**
 
@@ -20,42 +20,13 @@ OpenTelemetry's Go SDK ships excellent primitives and **no opinionated bootstrap
 - **Future-proof** — delegates to the now-stable declarative config (`otelconf`) when `OTEL_CONFIG_FILE` is set.
 - **Zero application dependencies.**
 
-## Modules
-
-The core stays lean for HTTP-only deployments; pull a `contrib/` module only when you need it.
-
-| Module | Import | Purpose | Heavy deps |
-|---|---|---|---|
-| **core** | `github.com/ubgo/otelkit` | Config, resource, providers, presets, diagnostics, OTLP/HTTP + stdout exporters, `otelconf` delegation | none beyond `go.opentelemetry.io/otel/*` |
-| **gRPC** | `github.com/ubgo/otelkit/contrib/otelkit-grpc` | OTLP/gRPC exporters (blank-import to enable; gRPC-preferring presets pull it) | `google.golang.org/grpc` |
-
-> Selecting `TransportGRPC` without importing the contrib module returns `otelkit.ErrGRPCNotLinked` — loud, not silent.
-
-## How it compares
-
-otelkit is the **vendor-neutral, batteries-included** bootstrap. The honest landscape (`otelconf` is the OTEL declarative-config standard — otelkit *delegates* to it, so they're complementary):
-
-| | **otelkit** | `setupOTelSDK` (docs snippet) | `otelconf` | Vendor distros (uptrace-go, …) |
-|---|:---:|:---:|:---:|:---:|
-| Vendor-neutral | ✅ | ✅ | ✅ | ❌ backend-locked |
-| Vendor presets — 1-line backend swap | ✅ | ❌ | ❌ | only their own |
-| Owns endpoint/port/`/v1/` path (no footguns) | ✅ | ❌ | ❌ | partial |
-| Loud diagnostics (self-test · probe · dry-run) | ✅ | ❌ | ❌ | ❌ |
-| Full `OTEL_*` env compliance | ✅ | partial | ✅ | partial |
-| Declarative `OTEL_CONFIG_FILE` | ✅ (delegates to `otelconf`) | ❌ | ✅ (it *is* this) | ❌ |
-| Real no-op on `OTEL_SDK_DISABLED` | ✅ | ❌ | ❌ | ❌ |
-| Ordered `Shutdown` + SIGTERM helper | ✅ | partial | partial | partial |
-| All three signals (traces/metrics/logs) | ✅ | ✅ | ✅ | varies |
-| Versioned library, not a copy-paste snippet | ✅ | ❌ | ✅ | ✅ |
-| Coverage | 100% | n/a | — | varies |
-
 ## Install
 
 ```bash
 go get github.com/ubgo/otelkit
 ```
 
-gRPC support lives in a separate module so the core stays free of `google.golang.org/grpc`:
+OTLP/gRPC support is an opt-in module (keeps `google.golang.org/grpc` out of the core):
 
 ```bash
 go get github.com/ubgo/otelkit/contrib/otelkit-grpc
@@ -100,9 +71,20 @@ if err := tel.RunOnSignal(ctx); err != nil { // blocks until SIGTERM/SIGINT, the
 }
 ```
 
+## Modules
+
+otelkit is split so the core stays dependency-light. Add the gRPC module only if your backend needs OTLP/gRPC.
+
+| Module | Import |
+|---|---|
+| **core** | [`github.com/ubgo/otelkit`](https://pkg.go.dev/github.com/ubgo/otelkit) |
+| **gRPC exporters** | [`github.com/ubgo/otelkit/contrib/otelkit-grpc`](https://pkg.go.dev/github.com/ubgo/otelkit/contrib/otelkit-grpc) |
+
+The **core** ships OTLP/HTTP + stdout exporters and depends only on `go.opentelemetry.io/otel/*`. The **gRPC** module adds OTLP/gRPC (pulling in `google.golang.org/grpc`) and self-registers on a blank import. Selecting `TransportGRPC` without it returns `otelkit.ErrGRPCNotLinked` — loud, not silent.
+
 ## Vendor presets
 
-One named constructor per backend, encoding the parts that silently break:
+Every observability backend wants OTLP data in a slightly different shape — a different endpoint, a different auth header *name* (there's no `Bearer` consensus), a path quirk, and sometimes delta-vs-cumulative metrics. Get one detail wrong and your data silently never arrives. **A preset is a one-line constructor that fills all of that in correctly for a specific vendor** — so pointing at HyperDX vs Grafana vs Datadog is a single line, not a research project.
 
 | Preset | Auth header | Notes |
 |---|---|---|
@@ -120,7 +102,11 @@ Switching backend is a one-line change:
 otelkit.WithPreset(otelkit.PresetGrafanaCloud("123456", "<token>", "https://otlp-gateway-prod-eu-west-2.grafana.net/otlp"))
 ```
 
-## Diagnostics — fail loud, at boot
+Full matrix and the reasoning behind each quirk: [docs/presets.md](./docs/presets.md).
+
+## Diagnostics — see failures instead of empty dashboards
+
+The OpenTelemetry SDK drops exports **silently**: a wrong key, endpoint, protocol, or TLS setting just loses data with no error, and you find out hours later from blank dashboards. otelkit gives you four ways to make those failures visible — at startup, not in production:
 
 ```go
 tel, err := otelkit.Init(ctx,
@@ -134,6 +120,8 @@ tel, err := otelkit.Init(ctx,
 - **Connectivity probe** — `otelkit.ProbeEndpoint(ctx, endpoint, transport, tlsMode)` diagnoses DNS / port / protocol / TLS problems with a human-readable message.
 - **`WithDryRun()`** — prints the resolved effective config (auth headers redacted) and routes telemetry to stdout, so you can verify wiring with no backend.
 - **Export-error handler** — installed by default (stderr); override with `WithErrorHandler`.
+
+More: [docs/diagnostics.md](./docs/diagnostics.md).
 
 ## gRPC
 
@@ -173,15 +161,15 @@ If you have the familiar ~150-line bootstrap (build three providers, attach OTLP
 | [Declarative config](./docs/declarative-config.md) | `OTEL_CONFIG_FILE` delegation. |
 | [Migration](./docs/migration.md) | Replacing a hand-rolled bootstrap. |
 | [Architecture](./docs/architecture.md) | How it fits; the endpoint/path rules. |
-| [ADRs](./adr) · [Snippets](./snippets) · [Coverage](./COVERAGE.md) | Decisions, copy-paste, test coverage. |
+| [ADRs](./docs/adr) · [Snippets](./docs/snippets) · [Coverage](./COVERAGE.md) | Decisions, copy-paste, test coverage. |
 
 API reference: [pkg.go.dev/github.com/ubgo/otelkit](https://pkg.go.dev/github.com/ubgo/otelkit).
 
 ## Examples
 
-Runnable programs in [`examples/`](./examples) — `go run ./01-basic`, etc.:
+Runnable programs in [`examples/`](./examples) — each in its own directory (`go run ./01-basic`):
 
-`01-basic` · `02-all-signals` · `03-k8s-prestop` · `04-presets` · `05-self-test` · `06-dry-run` · `07-declarative` · `08-grpc`
+[`01-basic`](./examples/01-basic) · [`02-all-signals`](./examples/02-all-signals) · [`03-k8s-prestop`](./examples/03-k8s-prestop) · [`04-presets`](./examples/04-presets) · [`05-self-test`](./examples/05-self-test) · [`06-dry-run`](./examples/06-dry-run) · [`07-declarative`](./examples/07-declarative) · [`08-grpc`](./examples/08-grpc)
 
 ## Quality
 
@@ -198,6 +186,24 @@ Both modules are held at **100% line coverage** with the race detector, gated in
 **My backend isn't a preset.** Use `PresetCollector(endpoint, transport)` (no auth) or set headers/endpoint via `WithConfig` / `OTEL_EXPORTER_OTLP_*`. Presets are a convenience, not a requirement.
 
 **Nothing reaches my backend and there's no error.** That's exactly what otelkit fixes — add `WithSelfTest()` to fail at startup, or `WithDryRun()` to print the resolved config. See [diagnostics.md](./docs/diagnostics.md).
+
+## How it compares
+
+otelkit is the **vendor-neutral, batteries-included** bootstrap. The honest landscape (`otelconf` is the OTEL declarative-config standard — otelkit *delegates* to it, so they're complementary):
+
+| | **otelkit** | `setupOTelSDK` (docs snippet) | `otelconf` | Vendor distros (uptrace-go, …) |
+|---|:---:|:---:|:---:|:---:|
+| Vendor-neutral | ✅ | ✅ | ✅ | ❌ backend-locked |
+| Vendor presets — 1-line backend swap | ✅ | ❌ | ❌ | only their own |
+| Owns endpoint/port/`/v1/` path (no footguns) | ✅ | ❌ | ❌ | partial |
+| Loud diagnostics (self-test · probe · dry-run) | ✅ | ❌ | ❌ | ❌ |
+| Full `OTEL_*` env compliance | ✅ | partial | ✅ | partial |
+| Declarative `OTEL_CONFIG_FILE` | ✅ (delegates to `otelconf`) | ❌ | ✅ (it *is* this) | ❌ |
+| Real no-op on `OTEL_SDK_DISABLED` | ✅ | ❌ | ❌ | ❌ |
+| Ordered `Shutdown` + SIGTERM helper | ✅ | partial | partial | partial |
+| All three signals (traces/metrics/logs) | ✅ | ✅ | ✅ | varies |
+| Versioned library, not a copy-paste snippet | ✅ | ❌ | ✅ | ✅ |
+| Coverage | 100% | n/a | — | varies |
 
 ## License
 

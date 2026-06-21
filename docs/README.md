@@ -9,7 +9,8 @@
 | [declarative-config.md](./declarative-config.md) | `OTEL_CONFIG_FILE` delegation to `otelconf`. |
 | [migration.md](./migration.md) | Replacing a hand-rolled bootstrap. |
 | [architecture.md](./architecture.md) | How the pipeline fits together; the endpoint/path rules. |
-| [../adr](../adr) | Architecture Decision Records. |
+| [adr/](./adr) | Architecture Decision Records. |
+| [snippets/](./snippets) | Copy-paste fragments per feature. |
 | [../examples](../examples) | Runnable example programs. |
 
 Generated API reference: [pkg.go.dev/github.com/ubgo/otelkit](https://pkg.go.dev/github.com/ubgo/otelkit).
